@@ -23,3 +23,14 @@ export {
   validateJson,
   inferSchema
 } from './utils/json-validator'
+
+export {
+  useSpecialValueDetection,
+  detectors
+} from './composables/useSpecialValueDetection'
+
+export type {
+  SpecialValueDetector,
+  SpecialValueResult,
+  ValidationResult
+} from './composables/useSpecialValueDetection'

@@ -38,6 +38,8 @@ export interface JsonEditorOptions {
     url?: boolean
     image?: boolean
     color?: boolean
+    phone?: boolean
+    email?: boolean
   }
   showLineNumbers?: boolean
   allowKeyboardNavigation?: boolean

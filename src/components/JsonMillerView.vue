@@ -47,12 +47,41 @@
               <div class="item-meta">
                 <span class="item-type-badge" :class="`type-badge--${selectedItem.type}`">{{ selectedItem.type }}</span>
                 <span class="item-path-compact">{{ getCompactPath() }}</span>
+                <!-- Special Value Indicator in Header -->
+                <span 
+                  v-if="!hasChildren(selectedItem) && selectedItem.type === 'string' && getSpecialValuePreview(selectedItem.value)" 
+                  class="special-value-indicator"
+                  :title="getSpecialValueTooltip(selectedItem.value) || undefined"
+                >
+                  {{ getSpecialValuePreview(selectedItem.value) }}
+                </span>
               </div>
             </div>
           </div>
           <div v-if="hasChildren(selectedItem)" class="item-stats">
             <div class="stat-badge">
               {{ selectedItem.children?.length || 0 }} {{ selectedItem.type === 'array' ? 'items' : 'props' }}
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Validation Warning -->
+        <div v-if="validationWarning" class="validation-warning-section">
+          <div class="section-header">
+            <span class="section-title">⚠️ Warning</span>
+          </div>
+          <div class="warning-content">
+            <div class="warning-message">
+              {{ validationWarning }}
+            </div>
+            <div class="warning-actions">
+              <button class="warning-btn warning-btn--continue" @click="continueWithChange">
+                Continue Anyway
+              </button>
+              <button class="warning-btn warning-btn--revert" @click="revertChange">
+                Revert Change
+              </button>
             </div>
           </div>
         </div>
@@ -154,18 +183,6 @@
           </div>
         </div>
 
-        <!-- Validation Errors -->
-        <div v-if="itemErrors.length > 0" class="errors-section">
-          <div class="section-header">
-            <span class="section-title">Validation Errors</span>
-          </div>
-          <div class="errors-content">
-            <div v-for="error in itemErrors" :key="error.message" class="error-item">
-              <span class="error-icon">⚠</span>
-              {{ error.message }}
-            </div>
-          </div>
-        </div>
       </div>
 
       <div v-else class="empty-inspector">
@@ -232,12 +249,12 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import type { 
   JsonNode as JsonNodeType, 
-  ValidationError, 
   JsonEditorOptions, 
   JsonValue, 
   JsonPath 
 } from '../types'
 import { treeToJson } from '../utils/json-model'
+import { useSpecialValueDetection } from '../composables/useSpecialValueDetection'
 
 interface PendingChange {
   type: string
@@ -248,7 +265,6 @@ interface PendingChange {
 
 interface Props {
   node: JsonNodeType | null
-  validationErrors: ValidationError[]
   options: JsonEditorOptions
 }
 
@@ -274,6 +290,18 @@ const pendingChanges = ref<PendingChange[]>([])
 const originalData = ref<any>(null) // JsonValue type causes TS recursion issues
 
 const themeClass = computed(() => `json-miller--${props.options.theme || 'light'}`)
+
+// Initialize special value detection composable
+const { 
+  getSpecialValuePreview, 
+  getSpecialValueTooltip,
+  getTypeChangeWarning,
+  wouldBreakSpecialType 
+} = useSpecialValueDetection(props.options)
+
+// Track validation warnings
+const validationWarning = ref<string | null>(null)
+const originalValue = ref<JsonValue | null>(null)
 
 const columns = computed(() => {
   const cols: Array<{ items: JsonNodeType[], selectedIndex?: number }> = []
@@ -323,12 +351,6 @@ const currentJsonData = computed(() => {
   return props.node ? treeToJson(props.node) : null
 })
 
-const itemErrors = computed(() => {
-  if (!selectedItem.value) return []
-  return props.validationErrors.filter(error =>
-    JSON.stringify(error.path) === JSON.stringify(selectedItem.value!.path)
-  )
-})
 
 const shouldShowActionsSection = computed(() => {
   if (!props.options.editable) return false
@@ -470,7 +492,20 @@ function updateValue() {
         newValue = editValue.value
     }
 
-    // Track the change instead of immediately updating
+    // Check if this change would break special type consistency
+    const originalVal = originalValue.value || selectedItem.value.value
+    if (typeof newValue === 'string' && wouldBreakSpecialType(originalVal, newValue)) {
+      const warning = getTypeChangeWarning(originalVal, newValue)
+      if (warning) {
+        validationWarning.value = warning
+        return // Don't apply the change yet, wait for user confirmation
+      }
+    }
+
+    // Clear any existing warning
+    validationWarning.value = null
+    
+    // Track the change
     trackChange(selectedItem.value.path, selectedItem.value.value, newValue, 'update')
   } catch {
     // Reset to original value on error
@@ -640,10 +675,56 @@ function cancelAdd() {
   newType.value = 'string'
 }
 
+function continueWithChange() {
+  if (!selectedItem.value) return
+  
+  let newValue: JsonValue
+  
+  try {
+    switch (editType.value) {
+      case 'number':
+        newValue = parseFloat(editValue.value)
+        if (isNaN(newValue)) throw new Error('Invalid number')
+        break
+      case 'boolean':
+        newValue = editValue.value === 'true'
+        break
+      case 'null':
+        newValue = null
+        break
+      default:
+        newValue = editValue.value
+    }
+    
+    // Force the change despite the warning
+    trackChange(selectedItem.value.path, selectedItem.value.value, newValue, 'update')
+    validationWarning.value = null
+    originalValue.value = null
+  } catch {
+    // Reset to original value on error
+    editValue.value = String(selectedItem.value.value)
+    validationWarning.value = null
+  }
+}
+
+function revertChange() {
+  if (!selectedItem.value) return
+  
+  // Revert to original value
+  editValue.value = String(originalValue.value || selectedItem.value.value)
+  validationWarning.value = null
+  originalValue.value = null
+}
+
+
 watch(selectedItem, (item) => {
   if (item && !hasChildren(item)) {
     editValue.value = String(item.value)
     editType.value = item.type as 'string' | 'number' | 'boolean' | 'null'
+    // Capture the original value for validation
+    originalValue.value = item.value
+    // Clear any existing warning when switching items
+    validationWarning.value = null
   }
 })
 
@@ -836,7 +917,8 @@ onMounted(() => {
 }
 
 .value-inspector {
-  width: 320px;
+  width: 380px;
+  min-width: 380px;
   background: var(--miller-column-bg);
   border-left: 1px solid var(--miller-border-subtle);
   display: flex;
@@ -862,10 +944,12 @@ onMounted(() => {
 .inspector-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  min-height: 0;
 }
 
 /* New compact header design */
@@ -911,8 +995,9 @@ onMounted(() => {
 .item-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .item-type-badge {
@@ -935,6 +1020,23 @@ onMounted(() => {
   font-size: 12px;
   color: var(--miller-text-subtle);
   font-family: var(--miller-font-mono);
+  word-break: break-all;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.special-value-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--miller-selected-bg);
+  color: var(--miller-selected);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid var(--miller-border-subtle);
+  cursor: help;
 }
 
 .item-stats {
@@ -1038,18 +1140,121 @@ onMounted(() => {
 }
 
 /* Section styling */
-.value-section, .actions-section {
+.value-section, .actions-section, .validation-warning-section {
   background: var(--miller-bg);
   border: 1px solid var(--miller-border-subtle);
   border-radius: 8px;
   overflow: hidden;
 }
 
-.errors-section {
-  background: var(--miller-bg);
+.validation-warning-section {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+
+/* Special Value Section */
+.special-value-content {
+  padding: 12px;
+}
+
+.special-value-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--miller-selected-bg);
+  color: var(--miller-selected);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
   border: 1px solid var(--miller-border-subtle);
-  border-radius: 8px;
-  overflow: hidden;
+}
+
+/* Validation Warning Section */
+.validation-warning-section .section-header {
+  background: #f59e0b;
+  color: white;
+}
+
+.warning-content {
+  padding: 10px;
+}
+
+.warning-message {
+  color: #92400e;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 10px;
+  font-weight: 500;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.warning-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.warning-btn {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+.warning-btn--continue {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
+}
+
+.warning-btn--continue:hover {
+  background: #d97706;
+  border-color: #d97706;
+}
+
+.warning-btn--revert {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.warning-btn--revert:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* Dark theme support for warnings */
+.json-miller--dark .validation-warning-section {
+  background: #451a03;
+  border-color: #f59e0b;
+}
+
+.json-miller--dark .validation-warning-section .section-header {
+  background: #f59e0b;
+}
+
+.json-miller--dark .warning-message {
+  color: #fbbf24;
+}
+
+.json-miller--dark .warning-btn--revert {
+  background: #374151;
+  color: #f3f4f6;
+  border-color: #6b7280;
+}
+
+.json-miller--dark .warning-btn--revert:hover {
+  background: #4b5563;
 }
 
 .section-header {
@@ -1069,7 +1274,7 @@ onMounted(() => {
 
 /* Compact value editor */
 .value-editor-compact {
-  padding: 12px;
+  padding: 10px;
 }
 
 .editor-type-row {
@@ -1225,10 +1430,10 @@ onMounted(() => {
 
 /* New action styling */
 .action-grid {
-  padding: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .action-btn {
@@ -1368,6 +1573,34 @@ onMounted(() => {
 .json-miller--dark .action-btn.save-btn:disabled:hover {
   background: #4b5563;
   border-color: #4b5563;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .value-inspector {
+    width: 350px;
+    min-width: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .value-inspector {
+    width: 320px;
+    min-width: 320px;
+  }
+  
+  .inspector-content {
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .item-header {
+    padding: 10px;
+  }
+  
+  .warning-message {
+    font-size: 11px;
+  }
 }
 
 .add-form {
@@ -1527,42 +1760,6 @@ onMounted(() => {
   border-color: #2563eb;
 }
 
-.errors-content {
-  padding: 12px;
-}
-
-.error-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #ef4444;
-  background: #fef2f2;
-  padding: 8px 10px;
-  border-radius: 4px;
-  border: 1px solid #fecaca;
-  margin-bottom: 6px;
-}
-
-.error-item:last-child {
-  margin-bottom: 0;
-}
-
-.error-icon {
-  font-size: 14px;
-  color: #dc2626;
-  margin-bottom: 8px;
-  padding: 12px;
-  background: #fef2f2;
-  border-radius: 8px;
-  border: 2px solid #fecaca;
-}
-
-.json-miller--dark .error-item {
-  background: #7f1d1d;
-  border-color: #991b1b;
-  color: #fca5a5;
-}
 
 .empty-inspector {
   flex: 1;

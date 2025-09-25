@@ -15,7 +15,9 @@ export const DEFAULT_OPTIONS: Required<JsonEditorOptions> = {
     date: true,
     url: true,
     image: true,
-    color: true
+    color: true,
+    phone: true,
+    email: true
   },
   showLineNumbers: false,
   allowKeyboardNavigation: true,

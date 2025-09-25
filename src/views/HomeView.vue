@@ -338,7 +338,9 @@ const editorOptions = ref({
     date: true,
     url: true,
     image: true,
-    color: true
+    color: true,
+    phone: true,
+    email: true
   },
   theme: currentTheme.value,
   showSaveButton: true,
@@ -390,29 +392,6 @@ function updateIndentSize(event: Event) {
             {{ currentTheme === 'light' ? 'Dark' : 'Light' }} Theme
           </button>
         </div>
-
-        <div class="control-group">
-          <h4>Visible Tabs</h4>
-          <div class="checkbox-group">
-            <!-- Views consolidated to Miller Columns only -->
-          </div>
-        </div>
-
-        <div class="control-group">
-          <h4>Layout</h4>
-          <div class="slider-group">
-            <label>
-              Indent Size: {{ editorOptions.indentSize }}px
-              <input
-                type="range"
-                min="10"
-                max="40"
-                v-model.number="editorOptions.indentSize"
-                @input="updateIndentSize"
-              />
-            </label>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -425,20 +404,6 @@ function updateIndentSize(event: Event) {
         @validate="handleValidate"
         @error="handleError"
       />
-    </div>
-
-    <div class="demo-features">
-      <h3>Features Demonstrated:</h3>
-      <ul>
-        <li>🌳 <strong>Tree View</strong> - Collapsible, hierarchical JSON structure</li>
-        <li>📝 <strong>Code View</strong> - Raw JSON editing with syntax validation</li>
-        <li>✏️ <strong>Inline Editing</strong> - Click any primitive value to edit</li>
-        <li>➕ <strong>Add/Remove</strong> - Add properties to objects, items to arrays</li>
-        <li>✅ <strong>Schema Validation</strong> - Real-time validation with JSON Schema</li>
-        <li>🎨 <strong>Smart Rendering</strong> - Special handling for dates, URLs, etc.</li>
-        <li>🌙 <strong>Dark/Light Themes</strong> - CSS variables for easy customization</li>
-        <li>⚡ <strong>Type-aware</strong> - Different input types for numbers, booleans, etc.</li>
-      </ul>
     </div>
   </div>
 </template>
