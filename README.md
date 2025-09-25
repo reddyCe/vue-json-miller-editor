@@ -42,30 +42,9 @@ A clean, minimal Vue 3 component for editing and validating JSON with Miller Col
 
 ## 📦 Installation
 
-This package is published as a private GitHub package. You need to configure your project to use GitHub Packages:
-
-### 1. Configure npm registry
-
-Create or update `.npmrc` in your project root:
-
 ```bash
-@reddyce:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=YOUR_NPM_PUBLISH_TOKEN
+npm install vue-json-miller-editor
 ```
-
-### 2. Install the package
-
-```bash
-npm install @reddyce/vue-json-edtr
-```
-
-### 3. Generate GitHub Token
-
-You need a GitHub Personal Access Token with `read:packages` permission:
-
-1. Go to GitHub Settings → Developer settings → Personal access tokens
-2. Generate a new token with `read:packages` scope
-3. Add it to your `.npmrc` file or environment variables
 
 ## 🚀 Quick Start
 
@@ -83,8 +62,8 @@ You need a GitHub Personal Access Token with `read:packages` permission:
 
 <script setup>
 import { ref } from 'vue'
-import { JsonEditor } from '@reddyce/vue-json-edtr'
-import '@reddyce/vue-json-edtr/dist/vue-json-edtr.css'
+import { JsonEditor } from 'vue-json-miller-editor'
+import 'vue-json-miller-editor/dist/vue-json-edtr.css'
 
 const jsonData = ref({
   name: "John Doe",

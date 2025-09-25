@@ -31,13 +31,13 @@
   ],
   "author": "Your Name",
   "license": "MIT",
-  "homepage": "https://github.com/bettermile/vue-json-editor",
+  "homepage": "https://github.com/reddyCe/vue-json-miller-editor",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bettermile/vue-json-editor.git"
+    "url": "https://github.com/reddyCe/vue-json-miller-editor.git"
   },
   "bugs": {
-    "url": "https://github.com/bettermile/vue-json-editor/issues"
+    "url": "https://github.com/reddyCe/vue-json-miller-editor/issues"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
