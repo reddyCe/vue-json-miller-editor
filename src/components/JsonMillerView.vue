@@ -662,7 +662,6 @@ onMounted(() => {
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
-  border: 1px solid var(--miller-border);
 }
 
 .json-miller--light {

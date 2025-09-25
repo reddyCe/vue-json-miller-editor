@@ -1,6 +1,6 @@
 {
   "name": "vue-json-miller-editor",
-  "version": "0.1.7",
+  "version": "0.1.9",
   "description": "A clean, minimal Vue 3 component for editing and validating JSON with Miller Columns interface",
   "type": "module",
   "main": "./dist/vue-json-edtr.umd.cjs",
@@ -29,7 +29,7 @@
     "typescript",
     "component"
   ],
-  "author": "Your Name",
+  "author": "Redon Cela",
   "license": "MIT",
   "homepage": "https://github.com/reddyCe/vue-json-miller-editor",
   "repository": {
