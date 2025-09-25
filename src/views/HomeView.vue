@@ -4,6 +4,56 @@ import JsonEditor from '../components/JsonEditor.vue'
 
 const sampleData = ref({
   "id": "gls-it",
+  
+  // Test complex schema composition with allOf
+  "adminUser": {
+    "name": "John Admin",
+    "age": 35,
+    "email": "john.admin@example.com",
+    "isActive": true,
+    "role": "admin",
+    "permissions": ["read", "write", "delete", "admin"],
+    "lastLogin": "2024-12-25T10:30:00Z"
+  },
+
+  // Test conditional validation (adult user with INVALID email to test validation)
+  "user": {
+    "name": "Jane Doe", 
+    "age": 25,
+    "email": "invalid-email-format",
+    "isActive": true,
+    "drivingLicense": "ABC123456789",
+    "canVote": true
+  },
+
+  // Test anyOf with email contact
+  "contact": {
+    "type": "email",
+    "value": "contact@example.com"
+  },
+
+  // Test oneOf with credit card payment (INVALID card number - too short)
+  "paymentMethod": {
+    "type": "credit_card", 
+    "cardNumber": "123456789012345",
+    "expiryDate": "12/25"
+  },
+
+  // Test complex nested validation with dependencies
+  "configuration": {
+    "database": {
+      "type": "postgresql",
+      "host": "localhost",
+      "port": 5432,
+      "sslmode": "require"
+    },
+    "features": {
+      "authentication": true,
+      "logging": false,
+      "caching": true
+    }
+  },
+
   "frontend": {
     "features": [
       {
@@ -157,8 +207,191 @@ const sampleData = ref({
 
 const sampleSchema = ref({
   type: "object",
+  definitions: {
+    "PersonSchema": {
+      type: "object",
+      properties: {
+        name: { type: "string", minLength: 2, maxLength: 50 },
+        age: { type: "integer", minimum: 0, maximum: 150 },
+        email: { type: "string", format: "email" },
+        isActive: { type: "boolean" }
+      },
+      required: ["name", "age"]
+    },
+    "AddressSchema": {
+      type: "object",
+      properties: {
+        street: { type: "string", minLength: 1 },
+        city: { type: "string", minLength: 1 },
+        country: { 
+          type: "string", 
+          enum: ["USA", "Canada", "UK", "Germany", "France", "Italy"] 
+        },
+        postalCode: { 
+          type: "string", 
+          pattern: "^[A-Z0-9]{3,10}$" 
+        }
+      },
+      required: ["street", "city", "country"]
+    }
+  },
   properties: {
     id: { type: "string", pattern: "^[a-z]+-[a-z]+$" },
+    
+    // Advanced schema composition with allOf
+    adminUser: {
+      allOf: [
+        { "$ref": "#/definitions/PersonSchema" },
+        {
+          properties: {
+            role: { const: "admin" },
+            permissions: {
+              type: "array",
+              items: { 
+                type: "string", 
+                enum: ["read", "write", "delete", "admin"] 
+              },
+              minItems: 1,
+              uniqueItems: true
+            },
+            lastLogin: { type: "string", format: "date-time" }
+          },
+          required: ["role", "permissions"]
+        }
+      ]
+    },
+
+    // Conditional validation with if/then/else
+    user: {
+      type: "object",
+      allOf: [
+        { "$ref": "#/definitions/PersonSchema" }
+      ],
+      if: {
+        properties: { age: { minimum: 18 } }
+      },
+      then: {
+        properties: {
+          drivingLicense: { type: "string", pattern: "^[A-Z0-9]{8,12}$" },
+          canVote: { const: true }
+        },
+        required: ["drivingLicense"]
+      },
+      else: {
+        properties: {
+          guardian: { "$ref": "#/definitions/PersonSchema" },
+          schoolGrade: { type: "integer", minimum: 1, maximum: 12 }
+        },
+        required: ["guardian"]
+      }
+    },
+
+    // Complex anyOf with multiple valid schemas
+    contact: {
+      anyOf: [
+        {
+          properties: {
+            type: { const: "email" },
+            value: { type: "string", format: "email" }
+          },
+          required: ["type", "value"]
+        },
+        {
+          properties: {
+            type: { const: "phone" },
+            value: { type: "string", pattern: "^\\+?[1-9]\\d{1,14}$" }
+          },
+          required: ["type", "value"]
+        },
+        {
+          properties: {
+            type: { const: "address" },
+            value: { "$ref": "#/definitions/AddressSchema" }
+          },
+          required: ["type", "value"]
+        }
+      ]
+    },
+
+    // oneOf for exclusive choices
+    paymentMethod: {
+      oneOf: [
+        {
+          properties: {
+            type: { const: "credit_card" },
+            cardNumber: { type: "string", pattern: "^[0-9]{16}$" },
+            expiryDate: { type: "string", pattern: "^(0[1-9]|1[0-2])\\/[0-9]{2}$" }
+          },
+          required: ["type", "cardNumber", "expiryDate"]
+        },
+        {
+          properties: {
+            type: { const: "paypal" },
+            paypalEmail: { type: "string", format: "email" }
+          },
+          required: ["type", "paypalEmail"]
+        },
+        {
+          properties: {
+            type: { const: "bank_transfer" },
+            iban: { type: "string", pattern: "^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$" },
+            bic: { type: "string", pattern: "^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$" }
+          },
+          required: ["type", "iban"]
+        }
+      ]
+    },
+
+    // Complex nested validation with dependencies
+    configuration: {
+      type: "object",
+      properties: {
+        database: {
+          type: "object",
+          properties: {
+            type: { enum: ["mysql", "postgresql", "mongodb"] },
+            host: { type: "string", format: "hostname" },
+            port: { type: "integer", minimum: 1, maximum: 65535 }
+          },
+          dependencies: {
+            type: {
+              oneOf: [
+                {
+                  properties: {
+                    type: { const: "mysql" },
+                    charset: { enum: ["utf8", "utf8mb4", "latin1"] }
+                  }
+                },
+                {
+                  properties: {
+                    type: { const: "postgresql" },
+                    sslmode: { enum: ["disable", "require", "verify-ca", "verify-full"] }
+                  }
+                },
+                {
+                  properties: {
+                    type: { const: "mongodb" },
+                    replicaSet: { type: "string" },
+                    authSource: { type: "string" }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        features: {
+          type: "object",
+          properties: {
+            authentication: { type: "boolean" },
+            logging: { type: "boolean" },
+            caching: { type: "boolean" }
+          },
+          additionalProperties: false
+        }
+      }
+    },
+
+    // Original simpler properties for comparison
     frontend: {
       type: "object",
       properties: {
@@ -266,31 +499,7 @@ const sampleSchema = ref({
               }
             }
           }
-        },
-        userManagement: {
-          type: "object",
-          properties: {
-            backofficeUsers: {
-              type: "object",
-              properties: {
-                roleMatrix: { type: "object" },
-                grantableRolesByRole: {
-                  type: "object",
-                  patternProperties: {
-                    ".*": {
-                      type: "array",
-                      items: { type: "string" }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        maxTemporaryUsersPerDepot: { type: "number", minimum: 0 },
-        liveStatusShowLastUpdatedTime: { type: "boolean" },
-        manualLiveDashboardRefreshActive: { type: "boolean" },
-        liveDashboardRefreshIntervalInSec: { type: "number", minimum: 1 }
+        }
       },
       required: ["features", "businessHours"]
     },
