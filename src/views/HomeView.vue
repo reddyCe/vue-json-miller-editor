@@ -4,7 +4,7 @@ import JsonEditor from '../components/JsonEditor.vue'
 
 const sampleData = ref({
   "id": "gls-it",
-  
+
   // Test complex schema composition with allOf
   "adminUser": {
     "name": "John Admin",
@@ -18,7 +18,7 @@ const sampleData = ref({
 
   // Test conditional validation (adult user with INVALID email to test validation)
   "user": {
-    "name": "Jane Doe", 
+    "name": "Jane Doe",
     "age": 25,
     "email": "invalid-email-format",
     "isActive": true,
@@ -34,7 +34,7 @@ const sampleData = ref({
 
   // Test oneOf with credit card payment (INVALID card number - too short)
   "paymentMethod": {
-    "type": "credit_card", 
+    "type": "credit_card",
     "cardNumber": "123456789012345",
     "expiryDate": "12/25"
   },
@@ -223,13 +223,13 @@ const sampleSchema = ref({
       properties: {
         street: { type: "string", minLength: 1 },
         city: { type: "string", minLength: 1 },
-        country: { 
-          type: "string", 
-          enum: ["USA", "Canada", "UK", "Germany", "France", "Italy"] 
+        country: {
+          type: "string",
+          enum: ["USA", "Canada", "UK", "Germany", "France", "Italy"]
         },
-        postalCode: { 
-          type: "string", 
-          pattern: "^[A-Z0-9]{3,10}$" 
+        postalCode: {
+          type: "string",
+          pattern: "^[A-Z0-9]{3,10}$"
         }
       },
       required: ["street", "city", "country"]
@@ -237,7 +237,7 @@ const sampleSchema = ref({
   },
   properties: {
     id: { type: "string", pattern: "^[a-z]+-[a-z]+$" },
-    
+
     // Advanced schema composition with allOf
     adminUser: {
       allOf: [
@@ -247,9 +247,9 @@ const sampleSchema = ref({
             role: { const: "admin" },
             permissions: {
               type: "array",
-              items: { 
-                type: "string", 
-                enum: ["read", "write", "delete", "admin"] 
+              items: {
+                type: "string",
+                enum: ["read", "write", "delete", "admin"]
               },
               minItems: 1,
               uniqueItems: true
@@ -561,6 +561,7 @@ const editorOptions = ref({
 
 function handleChange(newValue: any) {
   console.log('JSON changed:', newValue)
+  sampleData.value = newValue
 }
 
 function handleValidate(errors: any[]) {
@@ -576,12 +577,6 @@ function toggleTheme() {
   editorOptions.value.theme = currentTheme.value
 }
 
-// Tab functionality removed with view consolidation
-
-function updateIndentSize(event: Event) {
-  const target = event.target as HTMLInputElement
-  editorOptions.value.indentSize = parseInt(target.value)
-}
 
 </script>
 
@@ -619,65 +614,85 @@ function updateIndentSize(event: Event) {
 
 <style scoped>
 .demo-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .demo-header {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+  text-align: center;
 }
 
 .demo-header h2 {
-  margin-bottom: 1rem;
-  color: #2c3e50;
-  font-size: 2rem;
-  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--color-heading);
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
 .demo-header p {
-  color: #6c757d;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
+  color: var(--color-text-muted);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .demo-controls {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   display: flex;
   gap: 2rem;
   flex-wrap: wrap;
-  padding: 1.5rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--color-surface-elevated);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
 }
 
 .control-group {
   min-width: 200px;
+  text-align: center;
 }
 
 .control-group h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .control-btn {
-  padding: 0.5rem 1rem;
-  background: #007bff;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius-lg);
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
 }
 
 .control-btn:hover {
-  background: #0056b3;
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.control-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 .checkbox-group {
@@ -738,24 +753,28 @@ function updateIndentSize(event: Event) {
 }
 
 .demo-content {
-  margin-bottom: 3rem;
-  border-radius: 8px;
+  margin-bottom: 4rem;
+  border-radius: var(--border-radius-xl);
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .demo-features {
-  background: #f8f9fa;
-  padding: 2rem;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  background: var(--color-surface-elevated);
+  padding: 2.5rem;
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .demo-features h3 {
   margin-top: 0;
-  margin-bottom: 1rem;
-  color: #2c3e50;
-  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .demo-features ul {
@@ -765,11 +784,18 @@ function updateIndentSize(event: Event) {
 }
 
 .demo-features li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #e9ecef;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.demo-features li:hover {
+  padding-left: 0.5rem;
+  background: rgba(59, 130, 246, 0.04);
+  border-radius: var(--border-radius-sm);
 }
 
 .demo-features li:last-child {
@@ -777,6 +803,7 @@ function updateIndentSize(event: Event) {
 }
 
 .demo-features strong {
-  color: #2c3e50;
+  color: var(--color-heading);
+  font-weight: 600;
 }
 </style>
