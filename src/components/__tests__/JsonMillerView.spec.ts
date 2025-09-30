@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import JsonMillerView from '../JsonMillerView.vue'
-import type { JsonNode, JsonEditorOptions } from '@/types'
+import type { JsonNode } from '@/types'
+import { mergeOptions } from '@/utils/config'
 
 describe('JsonMillerView Actions Section', () => {
   let mockNode: JsonNode
@@ -43,11 +44,11 @@ describe('JsonMillerView Actions Section', () => {
   })
 
   it('shows actions section when save button is enabled', async () => {
-    const options: JsonEditorOptions = {
+    const options = mergeOptions({
       editable: true,
       showSaveButton: true,
       showAddButton: false
-    }
+    })
 
     const wrapper = mount(JsonMillerView, {
       props: {
@@ -66,11 +67,11 @@ describe('JsonMillerView Actions Section', () => {
   })
 
   it('hides actions section when both buttons are disabled', async () => {
-    const options: JsonEditorOptions = {
+    const options = mergeOptions({
       editable: true,
       showSaveButton: false,
       showAddButton: false
-    }
+    })
 
     const wrapper = mount(JsonMillerView, {
       props: {
@@ -89,11 +90,11 @@ describe('JsonMillerView Actions Section', () => {
   })
 
   it('hides actions section when not editable', async () => {
-    const options: JsonEditorOptions = {
+    const options = mergeOptions({
       editable: false,
       showSaveButton: true,
       showAddButton: true
-    }
+    })
 
     const wrapper = mount(JsonMillerView, {
       props: {
@@ -112,11 +113,11 @@ describe('JsonMillerView Actions Section', () => {
   })
 
   it('shows save button when enabled', async () => {
-    const options: JsonEditorOptions = {
+    const options = mergeOptions({
       editable: true,
       showSaveButton: true,
       showAddButton: false
-    }
+    })
 
     const wrapper = mount(JsonMillerView, {
       props: {
@@ -135,11 +136,11 @@ describe('JsonMillerView Actions Section', () => {
   })
 
   it('hides save button when disabled', async () => {
-    const options: JsonEditorOptions = {
+    const options = mergeOptions({
       editable: true,
       showSaveButton: false,
       showAddButton: true
-    }
+    })
 
     const wrapper = mount(JsonMillerView, {
       props: {
