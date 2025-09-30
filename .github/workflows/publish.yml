@@ -1,8 +1,6 @@
-name: Publish to GitHub Packages
+name: Manual Publish to NPM
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       version_type:
@@ -14,6 +12,11 @@ on:
           - patch
           - minor
           - major
+      skip_version_bump:
+        description: 'Skip version bump (publish current version)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -21,13 +24,14 @@ permissions:
   id-token: write
 
 jobs:
-  publish:
+  manual-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -56,14 +60,33 @@ jobs:
       - name: Build package
         run: npm run build
 
-      - name: Bump version (manual dispatch only)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Configure Git
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          npm version ${{ inputs.version_type }}
-          git push
-          git push --tags
+
+      - name: Bump version
+        if: ${{ !inputs.skip_version_bump }}
+        id: version-bump
+        run: |
+          NEW_VERSION=$(npm version ${{ inputs.version_type }} --no-git-tag-version)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $NEW_VERSION"
+          
+          # Commit and push changes
+          git add package.json package-lock.json
+          git commit -m "chore: manually bump version to $NEW_VERSION [skip ci]"
+          git tag $NEW_VERSION
+          git push origin main
+          git push origin $NEW_VERSION
+
+      - name: Get current version (if skipping bump)
+        if: ${{ inputs.skip_version_bump }}
+        id: current-version
+        run: |
+          CURRENT_VERSION="v$(node -p "require('./package.json').version")"
+          echo "new_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Using current version: $CURRENT_VERSION"
 
       - name: Check npm authentication
         run: npm whoami
@@ -75,13 +98,33 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
-      - name: Create GitHub Release (manual dispatch only)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Create GitHub Release
+        if: ${{ !inputs.skip_version_bump }}
         uses: actions/create-release@v1
         env:
-          NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.package-version.outputs.version }}
-          release_name: Release v${{ steps.package-version.outputs.version }}
+          tag_name: ${{ steps.version-bump.outputs.new_version }}
+          release_name: Manual Release ${{ steps.version-bump.outputs.new_version }}
+          body: |
+            ## Manual Release
+            
+            This release was manually triggered via GitHub Actions workflow.
+            
+            ### Version Bump Type: ${{ inputs.version_type }}
+            
+            ---
+            
+            ### Installation
+            ```bash
+            npm install vue-json-miller-editor@${{ steps.version-bump.outputs.new_version }}
+            ```
           draft: false
           prerelease: false
+
+      - name: Notify success
+        run: |
+          VERSION="${{ steps.version-bump.outputs.new_version || steps.current-version.outputs.new_version }}"
+          echo "✅ Successfully published vue-json-miller-editor to npm!"
+          echo "🏷️ Version: $VERSION"
+          echo "📦 NPM: https://www.npmjs.com/package/vue-json-miller-editor"

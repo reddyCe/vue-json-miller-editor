@@ -1,234 +1,238 @@
-# Publishing Guide - GitHub Packages
+# Publishing Guide - NPM Automated Publishing
 
-This guide explains how to publish the Vue JSON Editor as a private package to GitHub Packages.
+This guide explains the automated npm publishing setup for the Vue JSON Editor package.
 
-## Prerequisites
+## Overview
 
-1. **GitHub Organization**: You need a GitHub organization account
-2. **Repository**: Create a private repository in your organization
-3. **Permissions**: You need `write:packages` permission in the organization
+The project now has **automated npm publishing** that triggers on every commit to the `main` branch. It:
 
-## Setup Steps
+1. **Automatically determines version bump type** based on commit messages
+2. **Runs full test suite** (tests, type-checking, linting)
+3. **Builds the package**
+4. **Bumps version** in package.json
+5. **Publishes to npm**
+6. **Creates GitHub release** with auto-generated notes
+7. **Pushes version tag** back to repository
 
-### 1. Replace Placeholders
+## Automated Publishing Workflow
 
-Before publishing, replace these placeholders in the codebase:
+### Triggers
+- **Push to main branch** (auto-publish.yml)
+- **Manual workflow dispatch** (publish.yml)
 
-- `@reddyce` → Your actual GitHub username/organization name (e.g., `@acme-corp`)
-- `reddyce` → Your username/organization name in URLs
-- `Your Name` → Your actual name in package.json
+### Version Bump Logic
 
-**Files to update:**
-- `package.json` - name, repository URLs, author
-- `.npmrc` - organization scope
-- `README.md` - installation instructions
-- `.github/workflows/*.yml` - organization scope
+The automated workflow analyzes commit messages to determine version bump type:
 
-### 2. Create GitHub Repository
+| Commit Message Pattern | Version Bump | Example |
+|------------------------|--------------|---------|
+| `BREAKING:`, `feat!:`, `fix!:` | **major** | `BREAKING: remove deprecated API` |
+| `feat:` | **minor** | `feat: add new validation mode` |
+| `fix:`, `perf:`, `refactor:`, `style:`, `test:`, `docs:` | **patch** | `fix: resolve input validation bug` |
+| Any other message | **patch** | `update dependencies` |
 
-```bash
-# Initialize git repository
-git init
-git add .
-git commit -m "Initial commit: Vue JSON Editor"
+### Workflow Files
 
-# Add remote repository
-git remote add origin https://github.com/reddyce/vue-json-editor.git
-git branch -M main
-git push -u origin main
-```
+1. **`.github/workflows/auto-publish.yml`** - Automatic publishing on main branch commits
+2. **`.github/workflows/publish.yml`** - Manual publishing with options
+3. **`.github/workflows/ci.yml`** - Continuous integration testing
 
-### 3. Configure GitHub Packages Access
+## Setup Requirements
 
-#### For Publishing (Repository Settings):
-1. Go to repository Settings → Actions → General
-2. Set "Workflow permissions" to "Read and write permissions"
-3. Enable "Allow GitHub Actions to create and approve pull requests"
+### 1. NPM Authentication Token
 
-#### For Team Access:
-1. Go to Organization Settings → Packages
-2. Configure package visibility and access permissions
-3. Add teams/users who should have access
+You need to configure the `NPM_PUBLISH_TOKEN` secret in GitHub:
 
-### 4. Set up Local Authentication
+1. Create an NPM automation token:
+   ```bash
+   npm login
+   npm token create --type=automation
+   ```
 
-Create a GitHub Personal Access Token:
+2. Add the token to GitHub repository secrets:
+   - Go to Repository Settings → Secrets and variables → Actions
+   - Create new secret: `NPM_PUBLISH_TOKEN`
+   - Paste the token value
 
-1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Generate new token with these scopes:
-   - `write:packages` (for publishing)
-   - `read:packages` (for installing)
-   - `repo` (for accessing private repositories)
+### 2. Repository Permissions
 
-3. Add token to your environment:
-```bash
-export NPM_PUBLISH_TOKEN=your_token_here
-```
+Ensure the GitHub Actions have proper permissions:
+- Go to Repository Settings → Actions → General
+- Set "Workflow permissions" to "Read and write permissions"
+- Enable "Allow GitHub Actions to create and approve pull requests"
 
-Or add to your local `.npmrc`:
-```bash
-//npm.pkg.github.com/:_authToken=your_token_here
-```
+## Using the Automated Publishing
 
-## Publishing Methods
+### Automatic Publishing (Recommended)
 
-### Method 1: Automated Publishing (Recommended)
-
-1. **Create a Release** (triggers automatic publishing):
-```bash
-# Create and push a tag
-git tag v1.0.0
-git push origin v1.0.0
-
-# Or create release via GitHub UI
-```
-
-2. **Manual Workflow Dispatch**:
-   - Go to Actions tab in GitHub
-   - Select "Publish to GitHub Packages" workflow
-   - Click "Run workflow"
-   - Choose version bump type (patch/minor/major)
-
-### Method 2: Manual Publishing
-
-1. **Build the package**:
-```bash
-npm run build
-```
-
-2. **Publish to GitHub Packages**:
-```bash
-npm publish
-```
-
-## Installation for Consumers
-
-### 1. Configure Consumer Projects
-
-Each project that needs to install the package must configure GitHub Packages:
-
-**Create `.npmrc` in project root:**
-```bash
-@reddyce:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${NPM_PUBLISH_TOKEN}
-```
-
-**Or configure via npm:**
-```bash
-npm config set @reddyce:registry https://npm.pkg.github.com
-npm config set //npm.pkg.github.com/:_authToken YOUR_TOKEN
-```
-
-### 2. Install the Package
+Simply push commits to the `main` branch with descriptive commit messages:
 
 ```bash
-npm install @reddyce/vue-json-edtr
+# This will trigger a patch version bump
+git commit -m "fix: resolve validation error display issue"
+git push origin main
+
+# This will trigger a minor version bump  
+git commit -m "feat: add dark theme support"
+git push origin main
+
+# This will trigger a major version bump
+git commit -m "BREAKING: change JsonEditor API interface"
+git push origin main
 ```
 
-### 3. Use in Vue Project
+### Manual Publishing
 
-```vue
-<template>
-  <JsonEditor v-model="data" />
-</template>
+You can also trigger publishing manually via GitHub Actions:
 
-<script setup>
-import { JsonEditor } from '@reddyce/vue-json-edtr'
-import '@reddyce/vue-json-edtr/dist/vue-json-edtr.css'
+1. Go to the **Actions** tab in GitHub
+2. Select **"Manual Publish to NPM"** workflow
+3. Click **"Run workflow"**
+4. Choose options:
+   - **Version bump type**: patch/minor/major
+   - **Skip version bump**: publish current version without bumping
 
-const data = ref({ example: 'data' })
-</script>
-```
+### Skip CI
 
-## CI/CD Integration
+To commit without triggering auto-publish, add `[skip ci]` to your commit message:
 
-### GitHub Actions Example
-
-```yaml
-- name: Configure GitHub Packages
-  run: |
-    echo "@reddyce:registry=https://npm.pkg.github.com" >> .npmrc
-    echo "//npm.pkg.github.com/:_authToken=\${NPM_PUBLISH_TOKEN}" >> .npmrc
-  env:
-    NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-
-- name: Install dependencies
-  run: npm ci
-```
-
-### Docker Example
-
-```dockerfile
-# Set GitHub token as build arg
-ARG NPM_PUBLISH_TOKEN
-
-# Configure npm for GitHub Packages
-RUN echo "@reddyce:registry=https://npm.pkg.github.com" >> .npmrc
-RUN echo "//npm.pkg.github.com/:_authToken=${NPM_PUBLISH_TOKEN}" >> .npmrc
-
-# Install dependencies
-RUN npm ci
-
-# Clean up credentials
-RUN rm .npmrc
-```
-
-## Version Management
-
-### Semantic Versioning
-
-- **Patch** (1.0.1): Bug fixes, minor improvements
-- **Minor** (1.1.0): New features, backward compatible
-- **Major** (2.0.0): Breaking changes
-
-### Release Process
-
-1. **Update version**:
 ```bash
-npm version patch  # or minor/major
+git commit -m "docs: update README [skip ci]"
 ```
 
-2. **Update CHANGELOG.md** with new features/fixes
+## Monitoring Publishing
 
-3. **Create release**:
-```bash
-git push origin main --tags
-```
+### Check Workflow Status
 
-4. **Create GitHub Release** with release notes
+1. Go to **Actions** tab in GitHub repository
+2. Monitor workflow runs in real-time
+3. Check logs for any failures
+
+### Verify Publication
+
+After successful workflow:
+
+1. **NPM Package**: https://www.npmjs.com/package/vue-json-miller-editor
+2. **GitHub Releases**: Repository → Releases tab
+3. **Version Tags**: Repository → Tags tab
+
+## Version History
+
+The automated system maintains:
+- **Git tags** for each version (e.g., `v1.2.3`)
+- **GitHub releases** with auto-generated changelogs
+- **NPM package versions** with proper semver
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **403 Forbidden**: Check token permissions and package access
-2. **Package not found**: Verify organization name and registry configuration
-3. **Authentication failed**: Regenerate GitHub token with correct scopes
+1. **NPM Authentication Failed**
+   ```
+   Error: 401 Unauthorized
+   ```
+   **Solution**: Regenerate NPM token and update GitHub secret
+
+2. **Git Push Failed**
+   ```
+   Error: Permission denied
+   ```
+   **Solution**: Check workflow permissions in repository settings
+
+3. **Tests/Linting Failed**
+   ```
+   Error: npm test returned non-zero exit code
+   ```
+   **Solution**: Fix failing tests before pushing to main
+
+4. **Version Bump Failed**
+   ```
+   Error: Git working directory not clean
+   ```
+   **Solution**: Ensure no uncommitted changes before workflow runs
 
 ### Debug Commands
 
 ```bash
-# Check npm configuration
-npm config list
+# Check current version
+npm version
 
-# Test authentication
-npm whoami --registry=https://npm.pkg.github.com
+# Test build locally
+npm run build
+
+# Run full test suite
+npm test && npm run type-check && npm run lint:check
+
+# Check npm authentication
+npm whoami
 
 # View package info
-npm view @reddyce/vue-json-edtr --registry=https://npm.pkg.github.com
+npm view vue-json-miller-editor
 ```
 
-## Security Best Practices
+## Best Practices
 
-1. **Never commit tokens** to repository
-2. **Use environment variables** for tokens in CI/CD
-3. **Regularly rotate** GitHub tokens
-4. **Limit token scopes** to minimum required
-5. **Use organization secrets** for shared workflows
+### Commit Messages
+
+Use conventional commit format for accurate version bumping:
+
+```bash
+# Good examples
+git commit -m "feat: add schema validation support"
+git commit -m "fix: resolve memory leak in editor"
+git commit -m "docs: update API documentation"
+git commit -m "BREAKING: remove deprecated showTabs option"
+
+# Avoid generic messages
+git commit -m "updates"
+git commit -m "fixes"
+```
+
+### Release Strategy
+
+1. **Feature branches**: Develop features in separate branches
+2. **Pull requests**: Review changes before merging to main
+3. **Main branch**: Keep main stable and always publishable
+4. **Hotfixes**: Apply critical fixes directly to main for immediate publishing
+
+### Security
+
+1. **Never commit** NPM tokens to repository
+2. **Rotate tokens** regularly (every 6 months)
+3. **Monitor** published packages for unauthorized changes
+4. **Use organization secrets** for shared repositories
+
+## Manual Publishing (Fallback)
+
+If automated publishing fails, you can publish manually:
+
+```bash
+# 1. Ensure you're on main branch with latest changes
+git checkout main
+git pull origin main
+
+# 2. Run full test suite
+npm test
+npm run type-check  
+npm run lint:check
+
+# 3. Build package
+npm run build
+
+# 4. Bump version
+npm version patch  # or minor/major
+
+# 5. Publish to npm
+npm publish
+
+# 6. Push changes and tags
+git push origin main --tags
+```
 
 ## Support
 
 For issues with:
+- **Automated workflows**: Check workflow logs in Actions tab
+- **NPM publishing**: Verify token and package configuration  
+- **Version management**: Check git tags and package.json
 - **Package functionality**: Create issue in this repository
-- **GitHub Packages**: Check [GitHub Packages documentation](https://docs.github.com/en/packages)
-- **npm configuration**: Check [npm documentation](https://docs.npmjs.com/)
