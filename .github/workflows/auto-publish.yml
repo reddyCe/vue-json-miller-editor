@@ -57,44 +57,79 @@ jobs:
       - name: Check for version bump needed
         id: check-version
         run: |
-          # Get the last commit message
-          COMMIT_MSG=$(git log -1 --pretty=%B)
-          echo "Last commit: $COMMIT_MSG"
+          # Get recent commit messages (last 5 commits, excluding merges)
+          COMMIT_MSGS=$(git log -5 --no-merges --pretty=format:"%s")
+          echo "Recent commits (excluding merges):"
+          echo "$COMMIT_MSGS"
+          
+          # Get the most recent non-merge commit
+          LATEST_COMMIT=$(git log -1 --no-merges --pretty=format:"%s")
+          echo "Latest non-merge commit: $LATEST_COMMIT"
           
           # Determine version bump type based on commit message
-          if [[ "$COMMIT_MSG" =~ ^BREAKING.*|^feat.*!.*|^fix.*!.* ]]; then
+          # Check for breaking changes (major version)
+          if [[ "$LATEST_COMMIT" =~ ^BREAKING[[:space:]:] ]] || \
+             [[ "$LATEST_COMMIT" =~ !:[[:space:]] ]] || \
+             [[ "$LATEST_COMMIT" =~ feat.*!.*: ]] || \
+             [[ "$LATEST_COMMIT" =~ fix.*!.*: ]]; then
             echo "version_type=major" >> $GITHUB_OUTPUT
             echo "Version bump: major (breaking change detected)"
-          elif [[ "$COMMIT_MSG" =~ ^feat.* ]]; then
+          # Check for features (minor version)
+          elif [[ "$LATEST_COMMIT" =~ ^feat[[:space:]]*[:(] ]]; then
             echo "version_type=minor" >> $GITHUB_OUTPUT
             echo "Version bump: minor (feature detected)"
-          elif [[ "$COMMIT_MSG" =~ ^fix.*|^perf.*|^refactor.*|^style.*|^test.*|^docs.* ]]; then
+          # Check for patches (patch version)
+          elif [[ "$LATEST_COMMIT" =~ ^(fix|perf|refactor|style|test|docs|chore)[[:space:]]*[:(] ]]; then
             echo "version_type=patch" >> $GITHUB_OUTPUT
             echo "Version bump: patch (fix/improvement detected)"
+          # Handle non-conventional commits
+          elif [[ "$LATEST_COMMIT" =~ [Ff]ix|[Bb]ug|[Pp]atch ]]; then
+            echo "version_type=patch" >> $GITHUB_OUTPUT
+            echo "Version bump: patch (fix detected in message)"
+          elif [[ "$LATEST_COMMIT" =~ [Ff]eature|[Aa]dd ]]; then
+            echo "version_type=minor" >> $GITHUB_OUTPUT
+            echo "Version bump: minor (feature detected in message)"
           else
             echo "version_type=patch" >> $GITHUB_OUTPUT
-            echo "Version bump: patch (default)"
+            echo "Version bump: patch (default for: $LATEST_COMMIT)"
           fi
 
       - name: Bump version
         id: version-bump
         run: |
-          # Bump the version
-          NEW_VERSION=$(npm version ${{ steps.check-version.outputs.version_type }} --no-git-tag-version)
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New version: $NEW_VERSION"
+          # Get current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
           
-          # Extract version number without 'v' prefix for npm
-          VERSION_NUMBER=${NEW_VERSION#v}
-          echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
+          # Check if this is already a version bump commit
+          if [[ "${{ github.event.head_commit.message }}" == *"bump version to"* ]] || \
+             [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]]; then
+            echo "Skipping version bump - this appears to be an automated version commit"
+            echo "new_version=v$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "version_number=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "skip_bump=true" >> $GITHUB_OUTPUT
+          else
+            # Bump the version
+            echo "Bumping version using: ${{ steps.check-version.outputs.version_type }}"
+            NEW_VERSION=$(npm version ${{ steps.check-version.outputs.version_type }} --no-git-tag-version)
+            echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "New version: $NEW_VERSION"
+            
+            # Extract version number without 'v' prefix for npm
+            VERSION_NUMBER=${NEW_VERSION#v}
+            echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
+            echo "skip_bump=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Commit version bump
+        if: steps.version-bump.outputs.skip_bump != 'true'
         run: |
           git add package.json package-lock.json
           git commit -m "chore: bump version to ${{ steps.version-bump.outputs.new_version }} [skip ci]"
           git tag ${{ steps.version-bump.outputs.new_version }}
 
       - name: Push changes
+        if: steps.version-bump.outputs.skip_bump != 'true'
         run: |
           git push origin main
           git push origin ${{ steps.version-bump.outputs.new_version }}
@@ -110,6 +145,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
       - name: Create GitHub Release
+        if: steps.version-bump.outputs.skip_bump != 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
