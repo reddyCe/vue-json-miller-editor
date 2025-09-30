@@ -1,7 +1,7 @@
 <template>
   <div v-if="show" class="add-form-compact">
     <div class="form-header">
-      <span>Add new {{ parentType === 'array' ? 'item' : 'property' }}</span>
+      <span>{{ options.locale?.addNew || 'Add new' }} {{ parentType === 'array' ? (options.locale?.item || 'item') : (options.locale?.property || 'property') }}</span>
       <button @click="cancel" class="close-btn">×</button>
     </div>
     
@@ -9,20 +9,20 @@
       <input 
         v-if="parentType === 'object'"
         v-model="newKey" 
-        placeholder="Property name" 
+        :placeholder="options.locale?.propertyName || 'Property name'" 
         class="form-input compact" 
       />
       
       <div class="form-row">
         <select v-model="newType" class="form-select compact">
-          <option value="string">String</option>
-          <option value="number">Number</option>
-          <option value="boolean">Boolean</option>
-          <option value="null">Null</option>
-          <option value="object">Object</option>
-          <option value="array">Array</option>
+          <option value="string">{{ options.locale?.stringType || 'String' }}</option>
+          <option value="number">{{ options.locale?.numberType || 'Number' }}</option>
+          <option value="boolean">{{ options.locale?.booleanType || 'Boolean' }}</option>
+          <option value="null">{{ options.locale?.nullType || 'Null' }}</option>
+          <option value="object">{{ options.locale?.objectType || 'Object' }}</option>
+          <option value="array">{{ options.locale?.arrayType || 'Array' }}</option>
         </select>
-        <button @click="addItem" class="form-btn primary compact">Add</button>
+        <button @click="addItem" class="form-btn primary compact">{{ options.locale?.add || 'Add' }}</button>
       </div>
     </div>
   </div>
@@ -30,12 +30,13 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { JsonValue } from '../types'
+import type { JsonValue, JsonEditorOptions } from '../types'
 
 interface Props {
   show: boolean
   parentType: 'object' | 'array'
   parentChildrenLength?: number
+  options: Required<JsonEditorOptions>
 }
 
 interface Emits {

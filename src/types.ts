@@ -61,6 +61,19 @@ export interface JsonEditorOptions {
     loading?: string
     noChangesToSave?: string
     changesCount?: (count: number) => string
+    addNew?: string
+    item?: string
+    property?: string
+    propertyName?: string
+    stringType?: string
+    numberType?: string
+    booleanType?: string
+    nullType?: string
+    objectType?: string
+    arrayType?: string
+    add?: string
+    root?: string
+    items?: string
   }
   
   // Behavior

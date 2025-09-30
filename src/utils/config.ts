@@ -36,7 +36,20 @@ export const DEFAULT_OPTIONS: Required<JsonEditorOptions> = {
     cancel: 'Cancel',
     loading: 'Loading JSON data...',
     noChangesToSave: 'No changes to save',
-    changesCount: (count: number) => `${count} change${count !== 1 ? 's' : ''}`
+    changesCount: (count: number) => `${count} change${count !== 1 ? 's' : ''}`,
+    addNew: 'Add new',
+    item: 'item',
+    property: 'property',
+    propertyName: 'Property name',
+    stringType: 'String',
+    numberType: 'Number',
+    booleanType: 'Boolean',
+    nullType: 'Null',
+    objectType: 'Object',
+    arrayType: 'Array',
+    add: 'Add',
+    root: 'Root',
+    items: 'Items'
   },
   
   // Behavior

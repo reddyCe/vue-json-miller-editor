@@ -29,6 +29,7 @@
       :show="showAddForm"
       :parent-type="parentType"
       :parent-children-length="selectedItem?.children?.length || 0"
+      :options="options"
       @add-item="addItem"
       @cancel="showAddForm = false"
     />
@@ -42,7 +43,7 @@ import AddForm from './AddForm.vue'
 
 interface Props {
   selectedItem: JsonNodeType | null
-  options: JsonEditorOptions
+  options: Required<JsonEditorOptions>
   hasUnsavedChanges: boolean
   pendingChangesCount: number
 }

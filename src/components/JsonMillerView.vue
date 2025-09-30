@@ -148,11 +148,11 @@ function hasChildren(item: JsonNodeType): boolean {
 }
 
 function getColumnTitle(column: { items: JsonNodeType[], selectedIndex?: number }, index: number): string {
-  if (index === 0) return 'Root'
+  if (index === 0) return props.options.locale.root
   if (selectedPath.value[index - 1]) {
     return String(selectedPath.value[index - 1].key)
   }
-  return 'Items'
+  return props.options.locale.items
 }
 
 // Event handlers
