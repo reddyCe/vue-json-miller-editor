@@ -22,14 +22,20 @@ The project now has **automated npm publishing** that triggers on every commit t
 
 ### Version Bump Logic
 
-The automated workflow analyzes commit messages to determine version bump type:
+The automated workflow analyzes commit messages (excluding merge commits) to determine version bump type:
 
-| Commit Message Pattern | Version Bump | Example |
-|------------------------|--------------|---------|
-| `BREAKING:`, `feat!:`, `fix!:` | **major** | `BREAKING: remove deprecated API` |
-| `feat:` | **minor** | `feat: add new validation mode` |
-| `fix:`, `perf:`, `refactor:`, `style:`, `test:`, `docs:` | **patch** | `fix: resolve input validation bug` |
-| Any other message | **patch** | `update dependencies` |
+| Commit Message Pattern | Version Bump | Examples |
+|------------------------|--------------|----------|
+| `BREAKING:`, `feat!:`, `fix!:`, contains `!` | **major** | `BREAKING: remove deprecated API`<br>`feat!: change API interface` |
+| `feat:`, contains `feature`, `add ` | **minor** | `feat: add new validation mode`<br>`add new feature to editor` |
+| `fix:`, `docs:`, `test:`, `chore:`, `style:`, `perf:`, `refactor:`, contains `fix `, `bug`, `patch` | **patch** | `fix: resolve input validation bug`<br>`fix workflow issues`<br>`docs: update README` |
+| Any other message | **patch** | `update dependencies`<br>`bump version` |
+
+**Key Improvements:**
+- ✅ **Ignores merge commits** - Only analyzes actual feature/fix commits
+- ✅ **Case insensitive** - Works with any capitalization
+- ✅ **Flexible patterns** - Supports both conventional commits and natural language
+- ✅ **Prevents duplicate bumps** - Skips version bumping if commit already contains version bump
 
 ### Workflow Files
 
@@ -150,6 +156,12 @@ The automated system maintains:
    Error: Git working directory not clean
    ```
    **Solution**: Ensure no uncommitted changes before workflow runs
+
+5. **Version Not Bumping**
+   ```
+   Latest commit: Merge remote-tracking branch 'origin/main'
+   ```
+   **Solution**: The workflow now ignores merge commits and analyzes the most recent actual commit. Ensure your commit messages follow the patterns above.
 
 ### Debug Commands
 

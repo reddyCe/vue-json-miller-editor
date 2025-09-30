@@ -67,28 +67,35 @@ jobs:
           echo "Latest non-merge commit: $LATEST_COMMIT"
           
           # Determine version bump type based on commit message
+          # Convert to lowercase for easier matching
+          COMMIT_LOWER=$(echo "$LATEST_COMMIT" | tr '[:upper:]' '[:lower:]')
+          
           # Check for breaking changes (major version)
-          if [[ "$LATEST_COMMIT" =~ ^BREAKING[[:space:]:] ]] || \
-             [[ "$LATEST_COMMIT" =~ !:[[:space:]] ]] || \
-             [[ "$LATEST_COMMIT" =~ feat.*!.*: ]] || \
-             [[ "$LATEST_COMMIT" =~ fix.*!.*: ]]; then
+          if [[ "$COMMIT_LOWER" == "breaking"* ]] || \
+             [[ "$LATEST_COMMIT" == *"!"* ]] || \
+             [[ "$COMMIT_LOWER" == "feat!"* ]] || \
+             [[ "$COMMIT_LOWER" == "fix!"* ]]; then
             echo "version_type=major" >> $GITHUB_OUTPUT
             echo "Version bump: major (breaking change detected)"
           # Check for features (minor version)
-          elif [[ "$LATEST_COMMIT" =~ ^feat[[:space:]]*[:(] ]]; then
+          elif [[ "$COMMIT_LOWER" == "feat"* ]] || \
+               [[ "$COMMIT_LOWER" == *"feature"* ]] || \
+               [[ "$COMMIT_LOWER" == *"add "* ]]; then
             echo "version_type=minor" >> $GITHUB_OUTPUT
             echo "Version bump: minor (feature detected)"
           # Check for patches (patch version)
-          elif [[ "$LATEST_COMMIT" =~ ^(fix|perf|refactor|style|test|docs|chore)[[:space:]]*[:(] ]]; then
+          elif [[ "$COMMIT_LOWER" == "fix"* ]] || \
+               [[ "$COMMIT_LOWER" == "perf"* ]] || \
+               [[ "$COMMIT_LOWER" == "refactor"* ]] || \
+               [[ "$COMMIT_LOWER" == "style"* ]] || \
+               [[ "$COMMIT_LOWER" == "test"* ]] || \
+               [[ "$COMMIT_LOWER" == "docs"* ]] || \
+               [[ "$COMMIT_LOWER" == "chore"* ]] || \
+               [[ "$COMMIT_LOWER" == *"fix "* ]] || \
+               [[ "$COMMIT_LOWER" == *"bug"* ]] || \
+               [[ "$COMMIT_LOWER" == *"patch"* ]]; then
             echo "version_type=patch" >> $GITHUB_OUTPUT
             echo "Version bump: patch (fix/improvement detected)"
-          # Handle non-conventional commits
-          elif [[ "$LATEST_COMMIT" =~ [Ff]ix|[Bb]ug|[Pp]atch ]]; then
-            echo "version_type=patch" >> $GITHUB_OUTPUT
-            echo "Version bump: patch (fix detected in message)"
-          elif [[ "$LATEST_COMMIT" =~ [Ff]eature|[Aa]dd ]]; then
-            echo "version_type=minor" >> $GITHUB_OUTPUT
-            echo "Version bump: minor (feature detected in message)"
           else
             echo "version_type=patch" >> $GITHUB_OUTPUT
             echo "Version bump: patch (default for: $LATEST_COMMIT)"
