@@ -97,17 +97,35 @@ describe('ValidationSection', () => {
   })
 
   it('displays error details correctly', async () => {
+    // Use 3 errors to ensure it starts collapsed (not auto-expanded)
+    const manyErrors = [
+      ...mockErrors,
+      {
+        keyword: 'minimum',
+        message: 'should be >= 0',
+        path: ['count'],
+        schemaPath: '#/properties/count/minimum'
+      }
+    ]
+    
     const wrapper = mount(ValidationSection, {
       props: {
-        errors: mockErrors,
+        errors: manyErrors,
         validationWarning: null
       }
     })
 
-    // Trigger expansion by clicking the expand button
-    await wrapper.find('.expand-toggle').trigger('click')
+    // Should start collapsed with 3+ errors
+    expect(wrapper.find('.error-list').exists()).toBe(false)
     
+    // Trigger expansion by clicking the expand icon
+    await wrapper.find('.expand-icon').trigger('click')
+    await wrapper.vm.$nextTick()
+    
+    // Now errors should be visible
+    expect(wrapper.find('.error-list').exists()).toBe(true)
     const errorItems = wrapper.findAll('.error-item-compact')
+    expect(errorItems).toHaveLength(3)
     expect(errorItems[0].find('.error-keyword').text()).toBe('required')
     expect(errorItems[0].find('.error-message').text()).toBe('is required')
     expect(errorItems[1].find('.error-keyword').text()).toBe('type')
