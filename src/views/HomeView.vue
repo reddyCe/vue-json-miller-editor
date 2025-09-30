@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import JsonEditor from '../components/JsonEditor.vue'
+import type { JsonValue, ValidationError } from '../types'
 
 const sampleData = ref({
   "id": "gls-it",
@@ -559,12 +560,12 @@ const editorOptions = ref({
   }
 })
 
-function handleChange(newValue: any) {
+function handleChange(newValue: JsonValue) {
   console.log('JSON changed:', newValue)
   sampleData.value = newValue
 }
 
-function handleValidate(errors: any[]) {
+function handleValidate(errors: ValidationError[]) {
   console.log('Validation errors:', errors)
 }
 

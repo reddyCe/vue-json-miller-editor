@@ -1,3 +1,5 @@
+// Note: Using 'any' here to prevent TypeScript "excessively deep type instantiation" errors
+// that occur with recursive type definitions like: JsonValue -> JsonObject -> JsonValue
 export type JsonValue = any
 
 export interface JsonObject {
@@ -12,7 +14,7 @@ export interface JsonNode {
   id: string
   path: JsonPath
   key: string | number
-  value: any
+  value: any // JsonValue causes circular reference, using any for compatibility
   type: 'string' | 'number' | 'boolean' | 'null' | 'object' | 'array'
   parent?: JsonNode
   children?: JsonNode[]

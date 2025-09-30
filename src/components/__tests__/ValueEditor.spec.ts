@@ -199,7 +199,7 @@ describe('ValueEditor', () => {
     await wrapper.find('input').trigger('blur')
     
     // Should have at least one update-value event
-    const updateEvents = wrapper.emitted('update-value') as any[]
+    const updateEvents = wrapper.emitted('update-value') as unknown[][]
     expect(updateEvents.length).toBeGreaterThan(0)
     
     // Last event should be the manual input
@@ -210,7 +210,7 @@ describe('ValueEditor', () => {
     await wrapper.find('.type-selector').setValue('boolean')
     await wrapper.find('select.value-input-wide').setValue('true')
     
-    const allEvents = wrapper.emitted('update-value') as any[]
+    const allEvents = wrapper.emitted('update-value') as unknown[][]
     const lastBooleanEvent = allEvents[allEvents.length - 1]
     expect(lastBooleanEvent).toEqual([true, 'boolean'])
   })

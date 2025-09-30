@@ -27,7 +27,7 @@
 
     <AddForm
       :show="showAddForm"
-      :parent-type="selectedItem?.type as 'object' | 'array'"
+      :parent-type="parentType"
       :parent-children-length="selectedItem?.children?.length || 0"
       @add-item="addItem"
       @cancel="showAddForm = false"
@@ -75,6 +75,10 @@ const showSaveButton = computed(() => {
 const shouldShowSection = computed(() => {
   if (!props.options.editable) return false
   return showSaveButton.value || showAddButton.value
+})
+
+const parentType = computed((): 'object' | 'array' => {
+  return (props.selectedItem?.type as 'object' | 'array') || 'object'
 })
 
 function addItem(key: string | number, value: JsonValue) {

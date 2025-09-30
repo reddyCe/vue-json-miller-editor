@@ -35,7 +35,7 @@ const builtInDetectors: SpecialValueDetector[] = [
         return false
       }
     },
-    preview: (str: string): string => '🔗 Link',
+    preview: (_str: string): string => '🔗 Link',
     tooltip: (str: string): string => `URL: ${str}`
   },
   {
@@ -49,7 +49,7 @@ const builtInDetectors: SpecialValueDetector[] = [
         return false
       }
     },
-    preview: (str: string): string => '🖼️ Image',
+    preview: (_str: string): string => '🖼️ Image',
     tooltip: (str: string): string => `Image: ${str}`
   },
   {
@@ -85,7 +85,7 @@ const builtInDetectors: SpecialValueDetector[] = [
       
       return phonePatterns.some(pattern => pattern.test(str))
     },
-    preview: (str: string): string => '📞 Phone',
+    preview: (_str: string): string => '📞 Phone',
     tooltip: (str: string): string => `Phone: ${str}`
   },
   {
@@ -95,7 +95,7 @@ const builtInDetectors: SpecialValueDetector[] = [
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       return emailRegex.test(str)
     },
-    preview: (str: string): string => '📧 Email',
+    preview: (_str: string): string => '📧 Email',
     tooltip: (str: string): string => `Email: ${str}`
   }
 ]
@@ -133,7 +133,7 @@ export function useSpecialValueDetection(
     // Check each detector
     for (const detector of allDetectors) {
       // Check if this detector type is enabled in options
-      const isEnabled = (options.detectSpecialStrings as any)?.[detector.name]
+      const isEnabled = options.detectSpecialStrings?.[detector.name as keyof typeof options.detectSpecialStrings]
       if (!isEnabled) continue
       
       // Check if value matches this detector

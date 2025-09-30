@@ -72,7 +72,7 @@ interface Emits {
   (e: 'save-changes'): void
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 function close() {

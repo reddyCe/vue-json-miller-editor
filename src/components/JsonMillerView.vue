@@ -89,7 +89,7 @@ const {
 // Reactive state
 const selectedPath = ref<JsonNodeType[]>([])
 const showDiffModal = ref(false)
-const originalData = ref<any>(null)
+const originalData = ref<JsonValue | null>(null)
 
 // Validation state
 const validationWarning = ref<string | null>(null)
@@ -167,7 +167,7 @@ function selectItem(item: JsonNodeType, columnIndex: number) {
   }
 }
 
-function handleUpdateValue(value: JsonValue, type: string) {
+function handleUpdateValue(value: JsonValue, _type: string) {
   if (!selectedItem.value || hasChildren(selectedItem.value)) return
 
   // Check if this change would break special type consistency
