@@ -1,10 +1,10 @@
-export type JsonValue = string | number | boolean | null | JsonObject | JsonArray
+export type JsonValue = any
 
 export interface JsonObject {
-  [key: string]: JsonValue
+  [key: string]: any
 }
 
-export type JsonArray = JsonValue[]
+export type JsonArray = any[]
 
 export type JsonPath = (string | number)[]
 
@@ -12,7 +12,7 @@ export interface JsonNode {
   id: string
   path: JsonPath
   key: string | number
-  value: JsonValue
+  value: any
   type: 'string' | 'number' | 'boolean' | 'null' | 'object' | 'array'
   parent?: JsonNode
   children?: JsonNode[]
