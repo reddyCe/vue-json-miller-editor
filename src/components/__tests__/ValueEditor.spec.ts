@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ValueEditor from '../ValueEditor.vue'
-import type { JsonNode, JsonEditorOptions } from '@/types'
+import type { JsonNode } from '@/types'
+import { mergeOptions } from '@/utils/config'
 
 describe('ValueEditor', () => {
   const mockStringItem: JsonNode = {
@@ -37,12 +38,12 @@ describe('ValueEditor', () => {
     children: []
   }
 
-  const defaultOptions: JsonEditorOptions = {
+  const defaultOptions = mergeOptions({
     editable: true,
     locale: {
       editValue: 'Edit Value'
     }
-  }
+  })
 
   it('does not render for container types (object/array)', () => {
     const wrapper = mount(ValueEditor, {
