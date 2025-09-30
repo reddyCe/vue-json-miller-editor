@@ -93,7 +93,7 @@ interface PendingChange {
 interface Props {
   selectedItem: JsonNodeType | null
   validationErrors: ValidationError[]
-  options: JsonEditorOptions
+  options: Required<JsonEditorOptions>
   validationWarning?: string | null
   hasUnsavedChanges: boolean
   pendingChanges: PendingChange[]

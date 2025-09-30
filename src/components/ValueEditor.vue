@@ -45,7 +45,7 @@ import type { JsonNode as JsonNodeType, JsonValue, JsonEditorOptions } from '../
 
 interface Props {
   selectedItem: JsonNodeType | null
-  options: JsonEditorOptions
+  options: Required<JsonEditorOptions>
 }
 
 interface Emits {

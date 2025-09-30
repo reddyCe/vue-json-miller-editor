@@ -64,7 +64,7 @@ import DiffModal from './DiffModal.vue'
 interface Props {
   node: JsonNodeType | null
   validationErrors: ValidationError[]
-  options: JsonEditorOptions
+  options: Required<JsonEditorOptions>
 }
 
 interface Emits {
@@ -148,11 +148,11 @@ function hasChildren(item: JsonNodeType): boolean {
 }
 
 function getColumnTitle(column: { items: JsonNodeType[], selectedIndex?: number }, index: number): string {
-  if (index === 0) return props.options.locale.root
+  if (index === 0) return (props.options.locale?.root ?? 'Root')
   if (selectedPath.value[index - 1]) {
     return String(selectedPath.value[index - 1].key)
   }
-  return props.options.locale.items
+  return (props.options.locale?.items ?? 'Items')
 }
 
 // Event handlers

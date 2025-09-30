@@ -64,7 +64,7 @@ interface PendingChange {
 interface Props {
   show: boolean
   changes: PendingChange[]
-  options: JsonEditorOptions
+  options: Required<JsonEditorOptions>
 }
 
 interface Emits {
