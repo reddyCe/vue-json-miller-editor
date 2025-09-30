@@ -26,12 +26,7 @@ const jsonSchema = ref({ type: 'object' })
 
 const editorOptions = ref({
   theme: 'light',
-  editable: true,
-  showTabs: {
-    tree: true,
-    explorer: true,
-    code: true
-  }
+  editable: true
 })
 </script>
 ```
@@ -61,12 +56,6 @@ interface JsonEditorOptions {
   collapseDepth?: number // default: 2
   indentSize?: number // default: 20 (pixels)
   
-  // Tab visibility
-  showTabs?: {
-    tree?: boolean // default: true
-    explorer?: boolean // default: true  
-    code?: boolean // default: true
-  }
   
   // Default view when component loads
   defaultView?: 'tree' | 'explorer' | 'code' // default: 'tree'
@@ -112,19 +101,13 @@ interface JsonEditorOptions {
 
 ## Advanced Examples
 
-### Minimal Editor (Code Only)
+### Minimal Editor
 
 ```vue
 <JsonEditor
   v-model="jsonData"
   :options="{
-    showTabs: {
-      tree: false,
-      explorer: false,
-      code: true
-    },
-    defaultView: 'code',
-    showValidationStatus: false
+    validationMode: 'disabled'
   }"
 />
 ```
@@ -164,18 +147,12 @@ interface JsonEditorOptions {
 />
 ```
 
-### Explorer-First Layout
+### Custom Layout
 
 ```vue
 <JsonEditor
   v-model="jsonData"
   :options="{
-    defaultView: 'explorer',
-    showTabs: {
-      tree: false,
-      explorer: true,
-      code: true
-    },
     indentSize: 24,
     collapseDepth: 3
   }"
@@ -257,11 +234,7 @@ import type { JsonEditorOptions } from 'vue-json-edtr'
 
 const options: JsonEditorOptions = {
   theme: 'dark', // ✅ Autocomplete available
-  showTabs: {
-    tree: true,
-    explorer: false, // ✅ Type-safe
-    code: true
-  }
+  editable: true // ✅ Type-safe
 }
 ```
 
@@ -269,5 +242,5 @@ const options: JsonEditorOptions = {
 
 - **Large JSON**: Use `collapseDepth: 0` for large objects
 - **Read-only**: Set `editable: false` to disable editing features
-- **Minimal UI**: Hide unused tabs with `showTabs` configuration
+- **Minimal UI**: Use minimal configuration options
 - **Validation**: Use `validationMode: 'onDemand'` for better performance with large schemas

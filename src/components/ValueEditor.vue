@@ -3,7 +3,7 @@
     <div class="section-header">
       <span class="section-title">{{ options.locale?.editValue || 'Edit Value' }}</span>
     </div>
-    
+
     <div class="value-editor-compact">
       <div class="editor-type-row">
         <select v-model="editType" class="type-selector" @change="convertValue">
@@ -13,9 +13,9 @@
           <option value="null">Null</option>
         </select>
       </div>
-      
+
       <div class="editor-value-row">
-        <input 
+        <input
           v-if="editType !== 'boolean' && editType !== 'null'"
           v-model="editValue"
           :type="editType === 'number' ? 'number' : 'text'"
@@ -24,7 +24,7 @@
           @blur="updateValue"
           @keydown.enter="updateValue"
         />
-        <select 
+        <select
           v-else-if="editType === 'boolean'"
           v-model="editValue"
           class="value-input-wide"
@@ -177,7 +177,7 @@ watch(() => props.selectedItem, (item) => {
   border-radius: 6px;
   background: var(--miller-bg);
   color: var(--miller-text);
-  font-size: 13px;
+  font-size: 16px;
   font-family: var(--miller-font-mono);
   transition: all 0.2s ease;
 }

@@ -83,7 +83,7 @@ function saveChanges() {
   emit('save-changes')
 }
 
-function formatValue(value: JsonValue): string {
+function formatValue(value: JsonValue | undefined): string {
   if (value === undefined) return 'undefined'
   if (value === null) return 'null'
   if (typeof value === 'string') return `"${value}"`

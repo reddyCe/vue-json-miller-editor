@@ -33,7 +33,7 @@ export function deleteValueAtPath(obj: Record<string, JsonValue> | JsonValue[], 
 }
 
 // Helper function to get a value at a specific path in JSON
-export function getValueAtPath(obj: Record<string, JsonValue> | JsonValue[], path: JsonPath): JsonValue {
+export function getValueAtPath(obj: Record<string, JsonValue> | JsonValue[], path: JsonPath): JsonValue | undefined {
   let current: any = obj
   for (const key of path) {
     current = current?.[key]

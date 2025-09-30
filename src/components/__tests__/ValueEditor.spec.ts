@@ -140,14 +140,14 @@ describe('ValueEditor', () => {
       }
     })
 
-    expect(wrapper.find('input').element.value).toBe('test value')
-    expect(wrapper.find('.type-selector').element.value).toBe('string')
+    expect((wrapper.find('input').element as HTMLInputElement).value).toBe('test value')
+    expect((wrapper.find('.type-selector').element as HTMLSelectElement).value).toBe('string')
 
     // Change to number item
     await wrapper.setProps({ selectedItem: mockNumberItem })
     
-    expect(wrapper.find('input').element.value).toBe('25')
-    expect(wrapper.find('.type-selector').element.value).toBe('number')
+    expect((wrapper.find('input').element as HTMLInputElement).value).toBe('25')
+    expect((wrapper.find('.type-selector').element as HTMLSelectElement).value).toBe('number')
   })
 
   it('emits update-value when input value changes', async () => {

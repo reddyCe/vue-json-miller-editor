@@ -96,7 +96,7 @@ describe('ValidationSection', () => {
     expect(wrapper.find('.error-list').exists()).toBe(true)
   })
 
-  it('displays error details correctly', () => {
+  it('displays error details correctly', async () => {
     const wrapper = mount(ValidationSection, {
       props: {
         errors: mockErrors,
@@ -104,8 +104,8 @@ describe('ValidationSection', () => {
       }
     })
 
-    // Trigger expansion
-    wrapper.vm.errorsExpanded = true
+    // Trigger expansion by clicking the expand button
+    await wrapper.find('.expand-toggle').trigger('click')
     
     const errorItems = wrapper.findAll('.error-item-compact')
     expect(errorItems[0].find('.error-keyword').text()).toBe('required')

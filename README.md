@@ -2,7 +2,7 @@
 
 A clean, minimal Vue 3 component for editing and validating JSON with Miller Columns interface. Features a headerless design with focus on the editing experience.
 
-[![npm version](https://badge.fury.io/js/vue-json-edtr.svg)](https://badge.fury.io/js/vue-json-edtr)
+[![npm version](https://badge.fury.io/js/vue-json-edtr.svg)](https://www.npmjs.com/package/vue-json-miller-editor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 
@@ -245,19 +245,15 @@ Override any aspect with CSS variables:
 
 ## 📋 Usage Examples
 
-### Minimal Code Editor
+### Minimal Editor
 
 ```vue
 <JsonEditor 
   v-model="jsonData"
   :options="{
-    showTabs: { 
-      tree: false, 
-      explorer: false, 
-      code: true 
-    },
-    defaultView: 'code',
-    showValidationStatus: false
+    validationMode: 'disabled',
+    showSaveButton: false,
+    showAddButton: false
   }"
 />
 ```
@@ -298,16 +294,16 @@ Override any aspect with CSS variables:
 />
 ```
 
-### Explorer-First Layout
+### Expanded Layout
 
 ```vue
 <JsonEditor 
   v-model="jsonData"
   :options="{
-    defaultView: 'explorer',
-    showTabs: { tree: false, explorer: true, code: true },
     indentSize: 24,
-    collapseDepth: 3
+    collapseDepth: 3,
+    expandArraysInitially: true,
+    expandObjectsInitially: true
   }"
 />
 ```

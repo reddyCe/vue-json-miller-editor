@@ -8,7 +8,7 @@
         v-for="item in items"
         :key="item.id"
         class="column-item"
-        :class="{ 
+        :class="{
           selected: isSelected(item),
           'has-children': hasChildren(item)
         }"
@@ -146,7 +146,6 @@ function selectItem(item: JsonNodeType) {
   position: absolute;
   right: 12px;
   top: 50%;
-  transform: translateY(-50%);
   width: 6px;
   height: 6px;
   border-right: 2px solid var(--miller-text-subtle);
